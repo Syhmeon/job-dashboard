@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Recherche Emploi — Sylvain Druais</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+        .dashboard { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 24px 32px; border-radius: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        header h1 { font-size: 24px; font-weight: 700; }
+        header .subtitle { opacity: 0.8; font-size: 14px; margin-top: 4px; }
+        .filters { display: flex; gap: 12px; flex-wrap: wrap; }
+        .filters select { padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 13px; cursor: pointer; }
+        .filters select option { background: #1a1a2e; color: white; }
+
+        .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .kpi { background: white; border-radius: 12px; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s; }
+        .kpi:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        .kpi .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 8px; }
+        .kpi .value { font-size: 36px; font-weight: 800; }
+        .kpi .detail { font-size: 12px; color: #888; margin-top: 4px; }
+        .kpi.accent1 .value { color: #0f3460; }
+        .kpi.accent2 .value { color: #e94560; }
+        .kpi.accent3 .value { color: #0ea5e9; }
+        .kpi.accent4 .value { color: #10b981; }
+        .kpi.accent5 .value { color: #f59e0b; }
+
+        .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .chart-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .chart-card h3 { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 16px; }
+        .chart-card canvas { max-height: 300px; }
+
+        .full-width { grid-column: 1 / -1; }
+
+        .table-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .table-section h3 { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f8f9fa; padding: 10px 12px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e5e7eb; cursor: pointer; white-space: nowrap; user-select: none; }
+        th:hover { background: #eef0f2; }
+        th .sort-icon { opacity: 0.3; margin-left: 4px; }
+        th.sorted .sort-icon { opacity: 1; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+        tr:hover td { background: #f8fafc; }
+        td a { color: #0f3460; text-decoration: none; font-weight: 500; }
+        td a:hover { text-decoration: underline; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+        .badge-gouv { background: #dbeafe; color: #1e40af; }
+        .badge-quant { background: #fce7f3; color: #be185d; }
+        .badge-web3 { background: #d1fae5; color: #065f46; }
+        .badge-statut-np { background: #fef3c7; color: #92400e; }
+        .badge-statut-p { background: #d1fae5; color: #065f46; }
+        .badge-statut-e { background: #dbeafe; color: #1e40af; }
+        .badge-mode-h { background: #ede9fe; color: #5b21b6; }
+        .badge-mode-s { background: #f3f4f6; color: #374151; }
+
+        .priority-section { background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .priority-section h3 { color: #92400e; margin-bottom: 12px; }
+        .priority-item { background: white; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .priority-item .title { font-weight: 600; color: #1a1a2e; }
+        .priority-item .company { color: #666; font-size: 13px; }
+        .priority-item .location { color: #888; font-size: 12px; }
+
+        footer { text-align: center; color: #999; font-size: 12px; padding: 20px; }
+
+        @media (max-width: 768px) {
+            .charts { grid-template-columns: 1fr; }
+            .kpis { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <header>
+        <div>
+            <h1>Recherche Emploi — Tableau de Bord</h1>
+            <div class="subtitle">Sylvain Druais — Data Analyst / BI / Gouvernance — Toulouse</div>
+        </div>
+        <div class="filters">
+            <select id="filterSecteur"><option value="">Tous secteurs</option></select>
+            <select id="filterMode"><option value="">Tous modes</option></select>
+            <select id="filterTheme"><option value="">Tous CV</option></select>
+            <select id="filterLieu"><option value="">Toutes localisations</option></select>
+        </div>
+    </header>
+
+    <section class="kpis" id="kpis"></section>
+
+    <section class="priority-section" id="priorities">
+        <h3>Actions prioritaires — Offres a traiter cette semaine</h3>
+        <div id="priorityList"></div>
+    </section>
+
+    <section class="charts">
+        <div class="chart-card">
+            <h3>Repartition par secteur</h3>
+            <canvas id="chartSecteur"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Profil CV recommande</h3>
+            <canvas id="chartCV"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Mode de travail</h3>
+            <canvas id="chartMode"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Top entreprises (nb offres)</h3>
+            <canvas id="chartEntreprises"></canvas>
+        </div>
+    </section>
+
+    <section class="charts">
+        <div class="chart-card full-width">
+            <h3>Cartographie sectorielle — Entreprises de la region</h3>
+            <canvas id="chartBubble"></canvas>
+        </div>
+    </section>
+
+    <section class="table-section">
+        <h3>Toutes les offres (<span id="tableCount">36</span>)</h3>
+        <div style="overflow-x:auto;">
+            <table id="offersTable">
+                <thead>
+                    <tr>
+                        <th data-col="n">N° <span class="sort-icon">▲</span></th>
+                        <th data-col="titre">Poste <span class="sort-icon">▲</span></th>
+                        <th data-col="entreprise">Entreprise <span class="sort-icon">▲</span></th>
+                        <th data-col="lieu">Lieu <span class="sort-icon">▲</span></th>
+                        <th data-col="mode">Mode <span class="sort-icon">▲</span></th>
+                        <th data-col="secteur">Secteur <span class="sort-icon">▲</span></th>
+                        <th data-col="theme_cv">CV <span class="sort-icon">▲</span></th>
+                        <th data-col="statut">Statut <span class="sort-icon">▲</span></th>
+                        <th data-col="date_pub">Publication <span class="sort-icon">▲</span></th>
+                    </tr>
+                </thead>
+                <tbody id="offersBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <footer>
+        Dashboard genere le 17/04/2026 — Systeme de veille multi-agents Cowork — Donnees LinkedIn
+    </footer>
+</div>
+
+<script>
+const DATA = [{"n":1,"titre":"Senior Data Scientist","entreprise":"Capgemini (Sogeti I&D)","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Data Science / Lead","statut":"Non postulé","theme_cv":"B — Quantitatif","cv_reco":"CV Quantitatif FR","date_pub":"il y a 1 mois","url":"https://www.linkedin.com/jobs/view/4381651987/"},{"n":2,"titre":"Ingénieur Data Analyst systèmes aéronautiques H/F","entreprise":"Expleo Group","lieu":"Toulouse (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"Aéronautique","categorie":"Data Analyst / Systèmes","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 3 sem","url":"https://www.linkedin.com/jobs/view/4371439241/"},{"n":3,"titre":"Associate Data Governance Professional","entreprise":"Capgemini (Sogeti)","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Data Governance","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Governance EN","date_pub":"il y a 3 mois","url":"https://www.linkedin.com/jobs/view/4364350821/"},{"n":4,"titre":"Responsable Data Analyst & Appli métiers F/H","entreprise":"Aubert & Duval","lieu":"Pamiers","mode":"Hybride","contrat":"CDI","secteur":"Industrie","categorie":"Responsable Data / IA","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 3 sem","url":"https://www.linkedin.com/jobs/view/4371294953/"},{"n":5,"titre":"Consultant BI (H/F)","entreprise":"Davidson consulting","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Consultant BI","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 1 sem","url":"https://www.linkedin.com/jobs/view/4249620755/"},{"n":6,"titre":"Lead Analyst (Supply Analytics)","entreprise":"Agoda","lieu":"Bangkok","mode":"Sur site","contrat":"CDI","secteur":"Tech / Travel","categorie":"Lead Analyst","statut":"Non postulé","theme_cv":"B — Quantitatif","cv_reco":"CV Quantitative EN","date_pub":"il y a 2 sem","url":"https://www.linkedin.com/jobs/view/4372111343/"},{"n":7,"titre":"RÉFÉRENT(E) POWER BI (F/H)","entreprise":"REDEN","lieu":"Toulouse (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"Énergie","categorie":"Référent Power BI","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 4 mois","url":"https://www.linkedin.com/jobs/view/4326082145/"},{"n":8,"titre":"Data Analyst Logistics","entreprise":"CEVA Logistics","lieu":"Toulouse (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"Logistique","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Governance EN","date_pub":"il y a 1 jour","url":"https://www.linkedin.com/jobs/view/4399935605/"},{"n":9,"titre":"Consultant Power BI confirmé","entreprise":"HN Services","lieu":"Toulouse (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Consultant Power BI","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 3 sem","url":"https://www.linkedin.com/jobs/view/4388462146/"},{"n":10,"titre":"Support Data H/F (Airbus)","entreprise":"AEROCONTACT / Airbus","lieu":"Blagnac","mode":"Sur site","contrat":"CDI","secteur":"Aéronautique","categorie":"Business Data Modeler","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 1 jour","url":"https://www.linkedin.com/jobs/view/4400519681/"},{"n":11,"titre":"Chargé(e) d'Études Économiques","entreprise":"Banque de France","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"Banque / Finance","categorie":"Chargé d'études","statut":"Non postulé","theme_cv":"B — Quantitatif","cv_reco":"CV Quantitatif FR","date_pub":"il y a 3 sem","url":"https://www.linkedin.com/jobs/view/4356390504/"},{"n":12,"titre":"ATR - Business Analyst Profitability","entreprise":"Airbus (ATR)","lieu":"Toulouse (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"Aéronautique","categorie":"Business Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 2 j","url":"https://www.linkedin.com/jobs/view/4387567846/"},{"n":13,"titre":"Data Analyst / Analytics Engineer confirmé","entreprise":"Hygie31","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"Santé / Tech","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 1 jour","url":"https://www.linkedin.com/jobs/view/4402903367/"},{"n":14,"titre":"Consultant(e) Data Gouvernance - Industrie","entreprise":"CS GROUP","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Data Governance","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 1 jour","url":"https://www.linkedin.com/jobs/view/4402245566/"},{"n":15,"titre":"CDD Analyste immobilier & data","entreprise":"CHANEL","lieu":"Paris (Hybride)","mode":"Hybride","contrat":"CDD","secteur":"Luxe","categorie":"Analyste Data","statut":"Non postulé","theme_cv":"B — Quantitatif","cv_reco":"CV Quantitatif FR","date_pub":"il y a 2 j","url":"https://www.linkedin.com/jobs/view/4388956885/"},{"n":16,"titre":"Growth Operations - SaaS","entreprise":"LITY","lieu":"Toulouse (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"SaaS / Tech","categorie":"Growth Ops","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 3 j","url":"https://www.linkedin.com/jobs/view/4401067147/"},{"n":17,"titre":"Business Analyst H/F","entreprise":"GROUPE OPEN","lieu":"Toulouse (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Business Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 3 j","url":"https://www.linkedin.com/jobs/view/4379543501/"},{"n":18,"titre":"Data Analyst Power BI / Cyber","entreprise":"Sopra Steria","lieu":"Colomiers","mode":"Sur site","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Data Analyst Power BI","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 1 sem","url":"https://www.linkedin.com/jobs/view/4399283427/"},{"n":19,"titre":"Client Insights Data Analyst","entreprise":"Louis Vuitton","lieu":"Paris","mode":"Sur site","contrat":"CDI","secteur":"Luxe","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"B — Quantitatif","cv_reco":"CV Quantitatif FR","date_pub":"il y a 5 j","url":"https://www.linkedin.com/jobs/view/4388303257/"},{"n":20,"titre":"Data Analyst H/F","entreprise":"Kicklox","lieu":"Paris (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 3 j","url":"https://www.linkedin.com/jobs/view/4401020768/"},{"n":21,"titre":"Data Analyst H/F","entreprise":"Kicklox","lieu":"Toulouse (Hybride)","mode":"Hybride","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 4 j","url":"https://www.linkedin.com/jobs/view/4397752938/"},{"n":22,"titre":"Data Analyst F/H","entreprise":"GXO Logistics","lieu":"Labastide-Saint-Sernin","mode":"Sur site","contrat":"CDI","secteur":"Logistique","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"il y a 6 j","url":"https://www.linkedin.com/jobs/view/4400506127/"},{"n":23,"titre":"Business Analyst H/F","entreprise":"Free-Work","lieu":"Toulouse","mode":"Hybride","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Business Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"17/04/2026","url":"https://www.linkedin.com/jobs/view/4400408584/"},{"n":24,"titre":"Business Analyst (H/F)","entreprise":"fortil","lieu":"Toulouse","mode":"Hybride","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Business Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"17/04/2026","url":"https://www.linkedin.com/jobs/view/4402188079/"},{"n":25,"titre":"Data Analyst","entreprise":"Armée de l'air et de l'espace","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"Défense / Public","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"17/04/2026","url":"https://www.linkedin.com/jobs/view/4400407311/"},{"n":26,"titre":"TP - Reporting & Risk Lead","entreprise":"Anotech","lieu":"Paris","mode":"Sur site","contrat":"CDI","secteur":"Aéronautique","categorie":"Reporting / Risk","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"14/04/2026","url":"https://www.linkedin.com/jobs/view/4399559091/"},{"n":27,"titre":"Analyste Senior Quantitatif","entreprise":"Abeille Assurances","lieu":"Bois-Colombes","mode":"Hybride","contrat":"CDI","secteur":"Banque / Finance","categorie":"Analyste Quantitatif","statut":"Non postulé","theme_cv":"B — Quantitatif","cv_reco":"CV Quantitatif FR","date_pub":"16/04/2026","url":"https://www.linkedin.com/jobs/view/4255127285/"},{"n":28,"titre":"Consultant Power BI Confirmé","entreprise":"VISEO","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Consultant BI","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"Sponsorisé","url":"https://www.linkedin.com/jobs/view/4399174253/"},{"n":29,"titre":"Consultant Data Gouvernance","entreprise":"CGI Business Consulting","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"ESN / Conseil IT","categorie":"Data Governance","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"09/2025","url":"https://www.linkedin.com/jobs/view/4297673720/"},{"n":30,"titre":"DATA ANALYST (F/H) - EXPECTRA","entreprise":"Expectra / Aerocontact","lieu":"Blagnac","mode":"Sur site","contrat":"CDI","secteur":"Aéronautique","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"16/04/2026","url":"https://www.linkedin.com/jobs/view/4400927024/"},{"n":31,"titre":"Crypto GTM Lead","entreprise":"Spiko","lieu":"Paris","mode":"Hybride","contrat":"CDI","secteur":"Crypto / Fintech","categorie":"Growth / Ops","statut":"Non postulé","theme_cv":"C — Web3 / Blockchain","cv_reco":"CV Web3 FR","date_pub":"03/2026","url":"https://www.linkedin.com/jobs/view/4390187204/"},{"n":32,"titre":"Enseignant Génie Mathématique","entreprise":"INSA Toulouse","lieu":"Toulouse","mode":"Sur site","contrat":"CDI","secteur":"Enseignement","categorie":"Enseignement","statut":"Non postulé","theme_cv":"B — Quantitatif","cv_reco":"CV Quantitatif FR","date_pub":"10/04/2026","url":"https://www.linkedin.com/jobs/view/4398837294/"},{"n":33,"titre":"Data analyst H/F - GROUPE PIMENT","entreprise":"Groupe Piment","lieu":"Blagnac","mode":"Sur site","contrat":"CDI","secteur":"Aéronautique","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"10/04/2026","url":"https://www.linkedin.com/jobs/view/4398510469/"},{"n":34,"titre":"Senior Quantitative Finance Analyst","entreprise":"Bank of America","lieu":"Paris","mode":"Sur site","contrat":"CDI","secteur":"Banque / Finance","categorie":"Analyste Quantitatif","statut":"Non postulé","theme_cv":"B — Quantitatif","cv_reco":"CV Quantitatif FR","date_pub":"03/04/2026","url":"https://www.linkedin.com/jobs/view/4395280797/"},{"n":35,"titre":"Ingénieur Data Sûreté (CDD)","entreprise":"Thales","lieu":"Toulouse","mode":"Hybride","contrat":"CDD","secteur":"Aéronautique","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"12/04/2026","url":"https://www.linkedin.com/jobs/view/4388215042/"},{"n":36,"titre":"Assistant Data Analyst H/F","entreprise":"Banque Populaire Occitane","lieu":"Balma","mode":"Sur site","contrat":"CDI","secteur":"Banque / Finance","categorie":"Data Analyst","statut":"Non postulé","theme_cv":"A — Gouvernance & Transformation","cv_reco":"CV Gouvernance FR","date_pub":"16/04/2026","url":"https://www.linkedin.com/jobs/view/4390057290/"}];
+
+const ENTERPRISES = [{"nom":"Airbus / ATR","secteur":"Aéronautique / Défense","taille":"Grand groupe (>10k)","nb_offres":2},{"nom":"Thales","secteur":"Aéronautique / Défense","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"Safran","secteur":"Aéronautique / Défense","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"Capgemini / Sogeti","secteur":"ESN / Conseil IT","taille":"Grand groupe (>10k)","nb_offres":2},{"nom":"Sopra Steria","secteur":"ESN / Conseil IT","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"CGI","secteur":"ESN / Conseil IT","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"CS GROUP","secteur":"ESN / Conseil IT","taille":"ETI (1-10k)","nb_offres":1},{"nom":"VISEO","secteur":"ESN / Conseil IT","taille":"ETI (1-10k)","nb_offres":1},{"nom":"Davidson","secteur":"ESN / Conseil IT","taille":"ETI (1-10k)","nb_offres":1},{"nom":"Kicklox","secteur":"ESN / Conseil IT","taille":"PME","nb_offres":2},{"nom":"CEVA Logistics","secteur":"Transport / Logistique","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"GXO Logistics","secteur":"Transport / Logistique","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"Banque de France","secteur":"Banque / Finance","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"CHANEL","secteur":"Luxe","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"Louis Vuitton","secteur":"Luxe","taille":"Grand groupe (>10k)","nb_offres":1},{"nom":"Hygie31","secteur":"Santé / Tech","taille":"PME","nb_offres":1},{"nom":"LITY","secteur":"SaaS / Tech","taille":"Startup","nb_offres":1},{"nom":"Spiko","secteur":"Crypto / Fintech","taille":"Startup","nb_offres":1}];
+
+const COLORS = {
+    'ESN / Conseil IT': '#3b82f6', 'Aéronautique': '#ef4444', 'Banque / Finance': '#10b981',
+    'Logistique': '#f59e0b', 'Luxe': '#8b5cf6', 'Santé / Tech': '#ec4899',
+    'SaaS / Tech': '#06b6d4', 'Industrie': '#78716c', 'Énergie': '#84cc16',
+    'Défense / Public': '#6366f1', 'Crypto / Fintech': '#14b8a6', 'Enseignement': '#a855f7',
+    'Tech / Travel': '#f97316'
+};
+
+let filtered = [...DATA];
+let sortCol = 'n'; let sortDir = 1;
+let charts = {};
+
+function groupBy(arr, key) {
+    const map = {};
+    arr.forEach(item => { const k = item[key] || 'Autre'; map[k] = (map[k] || 0) + 1; });
+    return Object.entries(map).sort((a,b) => b[1] - a[1]);
+}
+
+function isToulouse(lieu) {
+    const l = lieu.toLowerCase();
+    return l.includes('toulouse') || l.includes('blagnac') || l.includes('colomiers') || l.includes('balma') || l.includes('labastide') || l.includes('pamiers');
+}
+
+function populateFilters() {
+    const sets = { secteur: new Set(), mode: new Set(), theme_cv: new Set(), lieu: new Set() };
+    DATA.forEach(d => { Object.keys(sets).forEach(k => { if(d[k]) sets[k].add(d[k]); }); });
+    Object.keys(sets).forEach(k => {
+        const sel = document.getElementById('filter' + k.charAt(0).toUpperCase() + k.slice(1).replace('_cv','').replace('theme','Theme').replace('secteur','Secteur').replace('mode','Mode').replace('lieu','Lieu'));
+        if (!sel) return;
+        [...sets[k]].sort().forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; sel.appendChild(o); });
+    });
+    // Fix filter IDs
+    const sectorVals = [...sets.secteur].sort();
+    const modeVals = [...sets.mode].sort();
+    const themeVals = [...sets.theme_cv].sort();
+    const lieuGroups = ['Toulouse & périphérie', 'Paris & IDF', 'Autre'];
+
+    document.getElementById('filterSecteur').innerHTML = '<option value="">Tous secteurs</option>' + sectorVals.map(v => `<option value="${v}">${v}</option>`).join('');
+    document.getElementById('filterMode').innerHTML = '<option value="">Tous modes</option>' + modeVals.map(v => `<option value="${v}">${v}</option>`).join('');
+    document.getElementById('filterTheme').innerHTML = '<option value="">Tous CV</option>' + themeVals.map(v => `<option value="${v}">${v}</option>`).join('');
+    document.getElementById('filterLieu').innerHTML = '<option value="">Toutes localisations</option><option value="toulouse">Toulouse & périphérie</option><option value="paris">Paris & IDF</option><option value="autre">Autre</option>';
+}
+
+function applyFilters() {
+    const s = document.getElementById('filterSecteur').value;
+    const m = document.getElementById('filterMode').value;
+    const t = document.getElementById('filterTheme').value;
+    const l = document.getElementById('filterLieu').value;
+
+    filtered = DATA.filter(d => {
+        if (s && d.secteur !== s) return false;
+        if (m && d.mode !== m) return false;
+        if (t && d.theme_cv !== t) return false;
+        if (l === 'toulouse' && !isToulouse(d.lieu)) return false;
+        if (l === 'paris' && !d.lieu.toLowerCase().includes('paris') && !d.lieu.toLowerCase().includes('colombes')) return false;
+        if (l === 'autre' && (isToulouse(d.lieu) || d.lieu.toLowerCase().includes('paris') || d.lieu.toLowerCase().includes('colombes'))) return false;
+        return true;
+    });
+    updateAll();
+}
+
+function updateKPIs() {
+    const total = filtered.length;
+    const toulouse = filtered.filter(d => isToulouse(d.lieu)).length;
+    const recent = filtered.filter(d => d.date_pub.includes('jour') || d.date_pub.includes('h') || d.date_pub.includes('17/04') || d.date_pub.includes('16/04')).length;
+    const gouv = filtered.filter(d => d.theme_cv.includes('Gouvernance')).length;
+    const secteurs = new Set(filtered.map(d => d.secteur)).size;
+
+    document.getElementById('kpis').innerHTML = `
+        <div class="kpi accent1"><div class="label">Offres suivies</div><div class="value">${total}</div><div class="detail">dont ${filtered.filter(d=>d.statut==='Non postulé').length} non postulees</div></div>
+        <div class="kpi accent4"><div class="label">Toulouse & peripherie</div><div class="value">${toulouse}</div><div class="detail">${Math.round(toulouse/total*100)}% du total</div></div>
+        <div class="kpi accent2"><div class="label">Offres recentes (< 3j)</div><div class="value">${recent}</div><div class="detail">A traiter en priorite</div></div>
+        <div class="kpi accent3"><div class="label">CV Gouvernance</div><div class="value">${gouv}</div><div class="detail">${Math.round(gouv/total*100)}% des offres</div></div>
+        <div class="kpi accent5"><div class="label">Secteurs couverts</div><div class="value">${secteurs}</div><div class="detail">${new Set(filtered.map(d=>d.entreprise)).size} entreprises</div></div>
+    `;
+}
+
+function updatePriorities() {
+    const recent = filtered.filter(d => d.date_pub.includes('jour') || d.date_pub.includes('h') || d.date_pub.includes('17/04') || d.date_pub.includes('16/04'));
+    const tlse = recent.filter(d => isToulouse(d.lieu)).slice(0, 5);
+    document.getElementById('priorityList').innerHTML = tlse.length ? tlse.map(d => `
+        <div class="priority-item">
+            <div><div class="title"><a href="${d.url}" target="_blank">${d.titre}</a></div><div class="company">${d.entreprise} — ${d.date_pub}</div></div>
+            <div style="text-align:right"><div class="location">${d.lieu}</div><span class="badge ${d.theme_cv.includes('Gouv')?'badge-gouv':d.theme_cv.includes('Quant')?'badge-quant':'badge-web3'}">${d.cv_reco}</span></div>
+        </div>
+    `).join('') : '<div style="color:#92400e;font-size:14px;">Aucune offre recente Toulouse dans la selection filtree</div>';
+}
+
+function updateCharts() {
+    // Sector chart
+    const sectorData = groupBy(filtered, 'secteur');
+    if(charts.secteur) charts.secteur.destroy();
+    charts.secteur = new Chart(document.getElementById('chartSecteur'), {
+        type: 'doughnut',
+        data: { labels: sectorData.map(s=>s[0]), datasets: [{ data: sectorData.map(s=>s[1]), backgroundColor: sectorData.map(s => COLORS[s[0]] || '#94a3b8'), borderWidth: 0 }] },
+        options: { responsive: true, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } }
+    });
+
+    // CV theme chart
+    const cvData = groupBy(filtered, 'theme_cv');
+    const cvColors = { 'A — Gouvernance & Transformation': '#3b82f6', 'B — Quantitatif': '#ec4899', 'C — Web3 / Blockchain': '#10b981' };
+    if(charts.cv) charts.cv.destroy();
+    charts.cv = new Chart(document.getElementById('chartCV'), {
+        type: 'doughnut',
+        data: { labels: cvData.map(s=>s[0].replace('A — ','').replace('B — ','').replace('C — ','')), datasets: [{ data: cvData.map(s=>s[1]), backgroundColor: cvData.map(s => cvColors[s[0]] || '#94a3b8'), borderWidth: 0 }] },
+        options: { responsive: true, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } }
+    });
+
+    // Mode chart
+    const modeData = groupBy(filtered, 'mode');
+    const modeColors = { 'Hybride': '#8b5cf6', 'Sur site': '#64748b', 'Télétravail partiel': '#06b6d4' };
+    if(charts.mode) charts.mode.destroy();
+    charts.mode = new Chart(document.getElementById('chartMode'), {
+        type: 'bar',
+        data: { labels: modeData.map(s=>s[0]), datasets: [{ data: modeData.map(s=>s[1]), backgroundColor: modeData.map(s => modeColors[s[0]] || '#94a3b8'), borderRadius: 6 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    // Top enterprises chart
+    const entData = groupBy(filtered, 'entreprise').slice(0, 8);
+    if(charts.ent) charts.ent.destroy();
+    charts.ent = new Chart(document.getElementById('chartEntreprises'), {
+        type: 'bar',
+        data: { labels: entData.map(s=>s[0]), datasets: [{ data: entData.map(s=>s[1]), backgroundColor: '#0f3460', borderRadius: 6 }] },
+        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    // Bubble chart - sector map
+    const sectorSizes = {};
+    ENTERPRISES.forEach(e => { sectorSizes[e.secteur] = (sectorSizes[e.secteur] || 0) + e.nb_offres; });
+    const sectorList = Object.entries(sectorSizes).sort((a,b) => b[1]-a[1]);
+    const bubbleData = sectorList.map((s, i) => ({
+        x: i,
+        y: ENTERPRISES.filter(e => e.secteur === s[0]).length,
+        r: Math.max(s[1] * 6, 8)
+    }));
+    if(charts.bubble) charts.bubble.destroy();
+    charts.bubble = new Chart(document.getElementById('chartBubble'), {
+        type: 'bubble',
+        data: { datasets: [{ data: bubbleData, backgroundColor: sectorList.map(s => (COLORS[s[0].split(' /')[0]] || '#94a3b8') + '99'), borderColor: sectorList.map(s => COLORS[s[0].split(' /')[0]] || '#94a3b8'), borderWidth: 2 }] },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: (ctx) => { const s = sectorList[ctx.dataIndex]; return `${s[0]}: ${s[1]} offres, ${bubbleData[ctx.dataIndex].y} entreprises`; } } }
+            },
+            scales: {
+                x: { display: true, title: { display: true, text: 'Secteur' }, ticks: { callback: (v) => sectorList[v] ? sectorList[v][0].substring(0,15) : '' } },
+                y: { display: true, title: { display: true, text: 'Nb entreprises' }, beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+}
+
+function updateTable() {
+    const sorted = [...filtered].sort((a,b) => {
+        const va = a[sortCol], vb = b[sortCol];
+        if (typeof va === 'number') return (va - vb) * sortDir;
+        return String(va).localeCompare(String(vb)) * sortDir;
+    });
+
+    document.getElementById('tableCount').textContent = sorted.length;
+    document.getElementById('offersBody').innerHTML = sorted.map(d => {
+        const themeBadge = d.theme_cv.includes('Gouv') ? 'badge-gouv' : d.theme_cv.includes('Quant') ? 'badge-quant' : 'badge-web3';
+        const themeShort = d.theme_cv.includes('Gouv') ? 'Gouv' : d.theme_cv.includes('Quant') ? 'Quant' : 'Web3';
+        const modeBadge = d.mode === 'Hybride' ? 'badge-mode-h' : 'badge-mode-s';
+        return `<tr>
+            <td>${d.n}</td>
+            <td><a href="${d.url}" target="_blank">${d.titre}</a></td>
+            <td>${d.entreprise}</td>
+            <td>${d.lieu}</td>
+            <td><span class="badge ${modeBadge}">${d.mode}</span></td>
+            <td>${d.secteur}</td>
+            <td><span class="badge ${themeBadge}">${themeShort}</span></td>
+            <td><span class="badge badge-statut-np">${d.statut}</span></td>
+            <td>${d.date_pub}</td>
+        </tr>`;
+    }).join('');
+}
+
+function updateAll() {
+    updateKPIs();
+    updatePriorities();
+    updateCharts();
+    updateTable();
+}
+
+// Sort table
+document.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (sortCol === col) sortDir *= -1; else { sortCol = col; sortDir = 1; }
+        document.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+        th.classList.add('sorted');
+        th.querySelector('.sort-icon').textContent = sortDir === 1 ? '▲' : '▼';
+        updateTable();
+    });
+});
+
+// Filter events
+['filterSecteur','filterMode','filterTheme','filterLieu'].forEach(id => {
+    document.getElementById(id).addEventListener('change', applyFilters);
+});
+
+// Init
+populateFilters();
+updateAll();
+</script>
+</body>
+</html>
