@@ -282,9 +282,9 @@ function isToulouse(loc) {
     const t = (loc||"").toLowerCase();
     return t.includes("toulouse") || t.includes("blagnac") || t.includes("colomiers") || t.includes("balma") || t.includes("labège") || t.includes("labastide") || t.includes("ramonville") || t.includes("siège") || t.includes("site") || t.includes("pamiers");
 }
-function tailleOrder(t) { return {  "Grand groupe":4, "ETI":3, "Public":3, "PME":2, "Startup":1 }[t] || 0; }
+function tailleOrder(t) { return { "Grand groupe":4, "ETI":3, "Public":3, "Public/Mixte":3, "PME":2, "PME/ETI":2.5, "Startup":1, "Startup scale-up":1.5, "Écosystème":2 }[t] || 0; }
 function tailleBadge(t) {
-    const c = { "Grand groupe":"badge-grand", "ETI":"badge-eti", "PME":"badge-pme", "Startup":"badge-startup", "Public":"badge-public" };
+    const c = { "Grand groupe":"badge-grand", "ETI":"badge-eti", "PME":"badge-pme", "PME/ETI":"badge-pme", "Startup":"badge-startup", "Startup scale-up":"badge-startup", "Public":"badge-public", "Public/Mixte":"badge-public", "Écosystème":"badge-eti" };
     return '<span class="badge '+(c[t]||'')+'">'+t+'</span>';
 }
 function offresBadge(n) { return n===0 ? '<span class="badge badge-zero">0</span>' : '<span class="badge badge-offres">'+n+'</span>'; }
