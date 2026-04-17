@@ -220,79 +220,9 @@
 </div>
 
 <script>
-// ==================== DATA ====================
-const entreprises = [
-    {nom:"Airbus / ATR",secteur:"Aéronautique / Défense",sousSecteur:"Avionneur",taille:"Grand groupe",location:"Toulouse (siège)",offres:2,derniere:"17/04/2026",postes:"Business Analyst, Data Analyst",stack:"SAP, Skywise, Python",notes:"Premier employeur privé de Toulouse"},
-    {nom:"Thales",secteur:"Aéronautique / Défense",sousSecteur:"Systèmes / Défense",taille:"Grand groupe",location:"Toulouse (site)",offres:1,derniere:"12/04/2026",postes:"Data Sûreté, Process",stack:"Python, outils internes",notes:"CDD détecté"},
-    {nom:"Safran",secteur:"Aéronautique / Défense",sousSecteur:"Moteurs / Équipements",taille:"Grand groupe",location:"Blagnac (site)",offres:1,derniere:"17/04/2026",postes:"Data Analyst (via Expectra)",stack:"",notes:"Souvent via intérim/ESN"},
-    {nom:"Expleo Group",secteur:"Aéronautique / Défense",sousSecteur:"Ingénierie (ESN)",taille:"ETI",location:"Toulouse",offres:1,derniere:"03/2026",postes:"Data Analyst Systèmes Aéro",stack:"Python, data viz, SCADA",notes:""},
-    {nom:"Anotech",secteur:"Aéronautique / Défense",sousSecteur:"Ingénierie",taille:"PME",location:"Paris",offres:1,derniere:"14/04/2026",postes:"Reporting & Risk Lead",stack:"",notes:"Poste basé Paris"},
-    {nom:"Armée de l'air et de l'espace",secteur:"Aéronautique / Défense",sousSecteur:"Défense publique",taille:"Public",location:"Toulouse",offres:1,derniere:"17/04/2026",postes:"Data Analyst",stack:"",notes:""},
-    {nom:"Capgemini / Sogeti",secteur:"ESN / Conseil IT",sousSecteur:"ESN Tier 1",taille:"Grand groupe",location:"Toulouse",offres:2,derniere:"02/2026",postes:"Data Scientist, Data Governance",stack:"Python, Spark, AWS/GCP",notes:""},
-    {nom:"Sopra Steria",secteur:"ESN / Conseil IT",sousSecteur:"ESN Tier 1",taille:"Grand groupe",location:"Colomiers",offres:1,derniere:"10/04/2026",postes:"Data Analyst Power BI / Cyber",stack:"Power BI",notes:""},
-    {nom:"CGI Business Consulting",secteur:"ESN / Conseil IT",sousSecteur:"ESN Tier 1",taille:"Grand groupe",location:"Toulouse",offres:1,derniere:"09/2025",postes:"Data Gouvernance",stack:"Outils data gov",notes:"Offre ancienne (7 mois)"},
-    {nom:"CS GROUP",secteur:"ESN / Conseil IT",sousSecteur:"ESN Défense/Spatial",taille:"ETI",location:"Toulouse",offres:1,derniere:"16/04/2026",postes:"Data Gouvernance Industrie",stack:"",notes:""},
-    {nom:"VISEO",secteur:"ESN / Conseil IT",sousSecteur:"Conseil Digital",taille:"ETI",location:"Toulouse",offres:1,derniere:"17/04/2026",postes:"Consultant Power BI",stack:"Power BI",notes:"Sponsorisé LinkedIn"},
-    {nom:"Davidson consulting",secteur:"ESN / Conseil IT",sousSecteur:"ESN / Conseil",taille:"ETI",location:"Toulouse",offres:1,derniere:"04/2026",postes:"Consultant BI",stack:"SQL, ETL, Power BI/Tableau/Qlik",notes:"Great Place to Work, B Corp"},
-    {nom:"HN Services",secteur:"ESN / Conseil IT",sousSecteur:"ESN",taille:"PME",location:"Toulouse",offres:1,derniere:"03/2026",postes:"Consultant Power BI",stack:"Power BI, DAX, SQL",notes:"ESN familiale, 3j télétravail"},
-    {nom:"OPEN (Groupe)",secteur:"ESN / Conseil IT",sousSecteur:"ESN",taille:"ETI",location:"Toulouse",offres:1,derniere:"14/04/2026",postes:"Business Analyst",stack:"",notes:""},
-    {nom:"fortil",secteur:"ESN / Conseil IT",sousSecteur:"Ingénierie / Conseil",taille:"ETI",location:"Toulouse",offres:1,derniere:"17/04/2026",postes:"Business Analyst",stack:"",notes:"Nouveau — à explorer"},
-    {nom:"Free-Work",secteur:"ESN / Conseil IT",sousSecteur:"Plateforme freelance/CDI",taille:"PME",location:"Toulouse",offres:1,derniere:"17/04/2026",postes:"Business Analyst",stack:"",notes:"Plateforme, pas employeur direct"},
-    {nom:"Kicklox",secteur:"ESN / Conseil IT",sousSecteur:"Plateforme ingénierie",taille:"PME",location:"Toulouse + Paris",offres:2,derniere:"13/04/2026",postes:"Data Analyst",stack:"",notes:"Plateforme intermédiaire"},
-    {nom:"CEVA Logistics (CMA CGM)",secteur:"Transport / Logistique",sousSecteur:"Logistique internationale",taille:"Grand groupe",location:"Toulouse (Hybride)",offres:1,derniere:"16/04/2026",postes:"Data Analyst Logistics",stack:"Excel, BI",notes:"Groupe CMA CGM"},
-    {nom:"GXO Logistics",secteur:"Transport / Logistique",sousSecteur:"Logistique",taille:"Grand groupe",location:"Labastide-Saint-Sernin",offres:1,derniere:"11/04/2026",postes:"Data Analyst",stack:"",notes:""},
-    {nom:"Banque de France",secteur:"Banque / Finance",sousSecteur:"Banque centrale",taille:"Grand groupe",location:"Toulouse",offres:1,derniere:"03/2026",postes:"Chargé études économiques",stack:"",notes:"CDI fonction publique"},
-    {nom:"Banque Populaire Occitane",secteur:"Banque / Finance",sousSecteur:"Banque régionale",taille:"ETI",location:"Balma",offres:1,derniere:"16/04/2026",postes:"Assistant Data Analyst",stack:"",notes:""},
-    {nom:"Bank of America",secteur:"Banque / Finance",sousSecteur:"Banque d'investissement",taille:"Grand groupe",location:"Paris",offres:1,derniere:"03/04/2026",postes:"Senior Quant Finance Analyst",stack:"",notes:"Paris uniquement"},
-    {nom:"Abeille Assurances",secteur:"Banque / Finance",sousSecteur:"Assurance",taille:"Grand groupe",location:"Bois-Colombes",offres:1,derniere:"16/04/2026",postes:"Analyste Quantitatif",stack:"",notes:"Île-de-France"},
-    {nom:"Aubert & Duval",secteur:"Industrie / Métallurgie",sousSecteur:"Métallurgie / Aéro",taille:"ETI",location:"Pamiers (09)",offres:1,derniere:"04/2026",postes:"Responsable Data Analyst & IA",stack:"Python, R, VBA, SQL, Power BI",notes:"Fournisseur Airbus/Safran"},
-    {nom:"REDEN",secteur:"Énergie",sousSecteur:"Photovoltaïque",taille:"ETI",location:"Toulouse (Hybride)",offres:1,derniere:"12/2025",postes:"Référent Power BI",stack:"Power BI, Python, SQL, SCADA",notes:"Offre ancienne (4 mois)"},
-    {nom:"Hygie31",secteur:"Santé / Medtech",sousSecteur:"Santé",taille:"PME",location:"Toulouse",offres:1,derniere:"16/04/2026",postes:"Data Analyst / Analytics Engineer",stack:"",notes:"Offre très récente, profil exact"},
-    {nom:"CHANEL",secteur:"Luxe / Retail",sousSecteur:"Maison de luxe",taille:"Grand groupe",location:"Paris",offres:1,derniere:"15/04/2026",postes:"Analyste immobilier & data",stack:"",notes:"CDD, Paris"},
-    {nom:"Louis Vuitton",secteur:"Luxe / Retail",sousSecteur:"Maison de luxe",taille:"Grand groupe",location:"Paris",offres:1,derniere:"11/04/2026",postes:"Client Insights Data Analyst",stack:"",notes:"Paris sur site"},
-    {nom:"LITY",secteur:"SaaS / Tech",sousSecteur:"SaaS",taille:"Startup",location:"Toulouse (Hybride)",offres:1,derniere:"14/04/2026",postes:"Growth Operations",stack:"",notes:"40-60k"},
-    {nom:"Spiko",secteur:"Crypto / Fintech",sousSecteur:"Stablecoin euro",taille:"Startup",location:"Paris (Hybride)",offres:1,derniere:"03/2026",postes:"Crypto GTM Lead",stack:"",notes:"Web3 relevant"},
-    {nom:"INSA Toulouse",secteur:"Enseignement / Recherche",sousSecteur:"Grande école ingé",taille:"Public",location:"Toulouse",offres:1,derniere:"10/04/2026",postes:"Enseignant Génie Math",stack:"",notes:"Poste enseignement"}
-];
-
-const offres = [
-    {n:1,titre:"Senior Data Scientist",entreprise:"Capgemini (Sogeti I&D)",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Data Science / Lead",cv:"B — Quantitatif",cvReco:"CV Quantitatif FR",date:"il y a 1 mois",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4381651987/"},
-    {n:2,titre:"Ingénieur Data Analyst systèmes aéro H/F",entreprise:"Expleo Group",lieu:"Toulouse (Hybride)",mode:"Hybride",contrat:"CDI",secteur:"Aéronautique / Défense",categorie:"Data Analyst / Systèmes",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 3 sem",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4371439241/"},
-    {n:3,titre:"Associate Data Governance Professional",entreprise:"Capgemini (Sogeti)",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Data Governance",cv:"A — Gouvernance",cvReco:"CV Governance EN",date:"il y a 3 mois",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4364350821/"},
-    {n:4,titre:"Responsable Data Analyst & Appli métiers",entreprise:"Aubert & Duval",lieu:"Pamiers",mode:"Télétravail partiel",contrat:"CDI",secteur:"Industrie / Métallurgie",categorie:"Responsable Data / IA",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 3 sem",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4371294953/"},
-    {n:5,titre:"Consultant BI (H/F)",entreprise:"Davidson consulting",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Consultant BI",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 1 sem",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4249620755/"},
-    {n:6,titre:"Lead Analyst (Supply Analytics)",entreprise:"Agoda",lieu:"Bangkok",mode:"Sur site",contrat:"CDI",secteur:"Tech / Travel",categorie:"Lead Analyst",cv:"B — Quantitatif",cvReco:"CV Quantitative EN",date:"il y a 2 sem",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4372111343/"},
-    {n:7,titre:"Référent(e) Power BI",entreprise:"REDEN",lieu:"Toulouse (Hybride)",mode:"Hybride",contrat:"CDI",secteur:"Énergie",categorie:"Référent Power BI",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 4 mois",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4326082145/"},
-    {n:8,titre:"Data Analyst Logistics",entreprise:"CEVA Logistics (CMA CGM)",lieu:"Toulouse (Hybride)",mode:"Hybride",contrat:"CDI",secteur:"Transport / Logistique",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Governance EN",date:"il y a 1 jour",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4399935605/"},
-    {n:9,titre:"Consultant Power BI confirmé",entreprise:"HN Services",lieu:"Toulouse (Hybride)",mode:"Hybride",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Consultant Power BI",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 3 sem",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4388462146/"},
-    {n:10,titre:"Support Data H/F (Airbus)",entreprise:"AEROCONTACT / Airbus",lieu:"Blagnac",mode:"Sur site",contrat:"CDI",secteur:"Aéronautique / Défense",categorie:"Business Data Modeler",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 1 jour",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4400519681/"},
-    {n:11,titre:"Chargé(e) d'Études Économiques",entreprise:"Banque de France",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"Banque / Finance",categorie:"Chargé d'études",cv:"B — Quantitatif",cvReco:"CV Quantitatif FR",date:"il y a 3 sem",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4356390504/"},
-    {n:12,titre:"ATR - Business Analyst Profitability",entreprise:"Airbus (ATR)",lieu:"Toulouse (Hybride)",mode:"Hybride",contrat:"Vacataire",secteur:"Aéronautique / Défense",categorie:"Business Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 1 jour",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4387567846/"},
-    {n:13,titre:"Data Analyst / Analytics Engineer confirmé",entreprise:"Hygie31",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"Santé / Medtech",categorie:"Data Analyst / Analytics Engineer",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 1 jour",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4402903367/"},
-    {n:14,titre:"Consultant(e) Data Gouvernance - Industrie",entreprise:"CS GROUP",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Consultant Data Governance",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 1 jour",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4402245566/"},
-    {n:15,titre:"CDD Analyste immobilier & data",entreprise:"Chanel SAS",lieu:"Paris (Hybride)",mode:"Hybride",contrat:"CDD",secteur:"Luxe / Retail",categorie:"Analyste Data",cv:"B — Quantitatif",cvReco:"CV Quantitatif FR",date:"il y a 1 jour",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4388956885/"},
-    {n:16,titre:"Growth Operations - SaaS",entreprise:"LITY",lieu:"Toulouse (Hybride)",mode:"Hybride",contrat:"CDI",secteur:"SaaS / Tech",categorie:"Growth Ops",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 3 jours",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4401067147/"},
-    {n:17,titre:"Business Analyst H/F",entreprise:"GROUPE OPEN",lieu:"Toulouse (Hybride)",mode:"Hybride",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Business Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 3 jours",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4379543501/"},
-    {n:18,titre:"Data Analyst Power BI / Pilotage Cyber",entreprise:"Sopra Steria",lieu:"Colomiers",mode:"Sur site",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Data Analyst Power BI",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 1 sem",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4399283427/"},
-    {n:19,titre:"Client Insights Data Analyst",entreprise:"Louis Vuitton",lieu:"Paris",mode:"Sur site",contrat:"CDI",secteur:"Luxe / Retail",categorie:"Data Analyst Insights",cv:"B — Quantitatif",cvReco:"CV Quantitatif FR",date:"il y a 5 jours",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4388303257/"},
-    {n:20,titre:"Data Analyst H/F",entreprise:"Kicklox",lieu:"Paris (Hybride)",mode:"Hybride",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 2 jours",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4401020768/"},
-    {n:21,titre:"Data Analyst H/F",entreprise:"Kicklox",lieu:"Toulouse (Hybride)",mode:"Hybride",contrat:"Vacataire",secteur:"ESN / Conseil IT",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 3 jours",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4397752938/"},
-    {n:22,titre:"Data Analyst F/H",entreprise:"GXO Logistics",lieu:"Labastide-Saint-Sernin",mode:"Sur site",contrat:"CDI",secteur:"Transport / Logistique",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"il y a 6 jours",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4400506127/"},
-    {n:23,titre:"Business Analyst H/F",entreprise:"Free-Work",lieu:"Toulouse",mode:"Hybride",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Business Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"17/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4400408584/"},
-    {n:24,titre:"Business Analyst (H/F)",entreprise:"fortil",lieu:"Toulouse",mode:"Hybride",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Business Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"17/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4402188079/"},
-    {n:25,titre:"Data Analyst",entreprise:"Armée de l'air et de l'espace",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"Aéronautique / Défense",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"17/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4400407311/"},
-    {n:26,titre:"Reporting & Risk Lead - VENUS",entreprise:"Anotech",lieu:"Paris",mode:"Sur site",contrat:"CDI",secteur:"Aéronautique / Défense",categorie:"Reporting / Risk",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"14/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4399559091/"},
-    {n:27,titre:"Analyste Senior Quantitatif",entreprise:"Abeille Assurances",lieu:"Bois-Colombes",mode:"Hybride",contrat:"CDI",secteur:"Banque / Finance",categorie:"Analyste Quantitatif",cv:"B — Quantitatif",cvReco:"CV Quantitatif FR",date:"16/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4255127285/"},
-    {n:28,titre:"Consultant Power BI Confirmé",entreprise:"VISEO",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Consultant BI",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"Sponsorisé",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4399174253/"},
-    {n:29,titre:"Consultant(e) Data Gouvernance",entreprise:"CGI Business Consulting",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"ESN / Conseil IT",categorie:"Data Governance",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"09/2025",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4297673720/"},
-    {n:30,titre:"Data Analyst (via Expectra)",entreprise:"Expectra / Safran",lieu:"Blagnac",mode:"Sur site",contrat:"CDI",secteur:"Aéronautique / Défense",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"16/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4400927024/"},
-    {n:31,titre:"Crypto GTM Lead",entreprise:"Spiko",lieu:"Paris",mode:"Hybride",contrat:"CDI",secteur:"Crypto / Fintech",categorie:"Growth / Ops",cv:"C — Web3",cvReco:"CV Web3 FR",date:"03/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4390187204/"},
-    {n:32,titre:"Enseignant Génie Math et Modélisation",entreprise:"INSA Toulouse",lieu:"Toulouse",mode:"Sur site",contrat:"CDI",secteur:"Enseignement / Recherche",categorie:"Enseignement",cv:"B — Quantitatif",cvReco:"CV Quantitatif FR",date:"10/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4398837294/"},
-    {n:33,titre:"Data Analyst H/F (Airbus)",entreprise:"Groupe Piment / Airbus",lieu:"Blagnac",mode:"Sur site",contrat:"CDI",secteur:"Aéronautique / Défense",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"10/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4398510469/"},
-    {n:34,titre:"Senior Quantitative Finance Analyst",entreprise:"Bank of America",lieu:"Paris",mode:"Sur site",contrat:"CDI",secteur:"Banque / Finance",categorie:"Analyste Quantitatif",cv:"B — Quantitatif",cvReco:"CV Quantitatif FR",date:"03/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4395280797/"},
-    {n:35,titre:"Ingénieur Support Process & Data Sûreté (CDD)",entreprise:"Thales",lieu:"Toulouse",mode:"Hybride",contrat:"CDD",secteur:"Aéronautique / Défense",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"12/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4388215042/"},
-    {n:36,titre:"Assistant Data Analyst H/F",entreprise:"Banque Populaire Occitane",lieu:"Balma",mode:"Sur site",contrat:"CDI",secteur:"Banque / Finance",categorie:"Data Analyst",cv:"A — Gouvernance",cvReco:"CV Gouvernance FR",date:"16/04/2026",statut:"Non postulé",url:"https://www.linkedin.com/jobs/view/4390057290/"}
-];
+// ==================== DATA (loaded from data.json) ====================
+let entreprises = [];
+let offres = [];
 
 // ==================== UTILITY ====================
 function isToulouse(loc) {
@@ -315,7 +245,7 @@ function switchTab(tab) {
 }
 
 // ==================== ENTREPRISES ====================
-let entSortCol='offres', entSortAsc=false, filteredEntreprises=[...entreprises];
+let entSortCol='offres', entSortAsc=false, filteredEntreprises=[];
 
 function initEntrepriseFilters() {
     const secteurs=[...new Set(entreprises.map(e=>e.secteur))].sort();
@@ -418,7 +348,7 @@ function renderHeatmap() {
 }
 
 // ==================== OFFRES ====================
-let offSortCol='n', offSortAsc=false, filteredOffres=[...offres];
+let offSortCol='n', offSortAsc=false, filteredOffres=[];
 
 function initOffreFilters() {
     const secteurs=[...new Set(offres.map(o=>o.secteur))].sort();
@@ -530,8 +460,18 @@ function renderOffreTopChart() {
 }
 
 // ==================== INIT ====================
-function init(){initEntrepriseFilters();initOffreFilters();filterEntreprises();filterOffres();renderPriorityActions();}
-init();
+function initDashboard(){initEntrepriseFilters();initOffreFilters();filterEntreprises();filterOffres();renderPriorityActions();}
+
+fetch('data.json')
+    .then(r => r.json())
+    .then(data => {
+        entreprises = data.entreprises;
+        offres = data.offres;
+        initDashboard();
+    })
+    .catch(err => {
+        document.querySelector('.dashboard').innerHTML = '<div style="padding:40px;text-align:center;color:#e94560"><h2>Erreur de chargement</h2><p>Impossible de charger data.json</p><p style="font-size:12px;color:#888">'+err.message+'</p></div>';
+    });
 </script>
 </body>
 </html>
