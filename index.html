@@ -67,6 +67,11 @@
         .badge-public { background: #f3f4f6; color: #374151; }
         .badge-offres { background: #fef2f2; color: #991b1b; font-weight: 700; }
         .badge-zero { background: #f3f4f6; color: #9ca3af; }
+        .badge-rel-tres-forte { background: #dcfce7; color: #166534; font-weight: 700; }
+        .badge-rel-forte { background: #dbeafe; color: #1e40af; }
+        .badge-rel-moyenne { background: #fef3c7; color: #92400e; }
+        .badge-rel-faible { background: #f3f4f6; color: #6b7280; }
+        .badge-source { background: #ede9fe; color: #5b21b6; font-size: 10px; }
 
         /* Priority actions */
         .priority-section { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #fde68a; }
@@ -110,6 +115,7 @@
     <div class="tabs">
         <button class="tab active" onclick="switchTab('entreprises')" id="tab-entreprises">Entreprises Région <span class="tab-count" id="count-entreprises"></span></button>
         <button class="tab" onclick="switchTab('offres')" id="tab-offres">Offres & Candidatures <span class="tab-count" id="count-offres"></span></button>
+        <button class="tab" onclick="switchTab('carto')" id="tab-carto">Cartographie <span class="tab-count" id="count-carto"></span></button>
     </div>
 
     <!-- ==================== VUE ENTREPRISES ==================== -->
@@ -213,6 +219,53 @@
                     </tr>
                 </thead>
                 <tbody id="tbody-offres"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ==================== VUE CARTOGRAPHIE ==================== -->
+    <div class="tab-content" id="view-carto">
+        <div class="filters" id="filters-carto">
+            <select id="filter-carto-secteur" onchange="filterCarto()"><option value="">Tous secteurs</option></select>
+            <select id="filter-carto-taille" onchange="filterCarto()"><option value="">Toutes tailles</option></select>
+            <select id="filter-carto-relevance" onchange="filterCarto()">
+                <option value="">Toute relevance</option>
+                <option value="tres-forte">Très forte</option>
+                <option value="forte">Forte</option>
+                <option value="moyenne">Moyenne</option>
+                <option value="faible">Faible / Faible-Moyenne</option>
+            </select>
+            <select id="filter-carto-source" onchange="filterCarto()"><option value="">Toutes sources</option></select>
+        </div>
+
+        <div class="kpis" id="kpis-carto"></div>
+
+        <div class="charts">
+            <div class="chart-card">
+                <h3>Entreprises par secteur</h3>
+                <canvas id="chart-carto-secteur"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Relevance data</h3>
+                <canvas id="chart-carto-relevance"></canvas>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <h3>Cartographie complète — Entreprises cibles Toulouse + 50km</h3>
+            <table id="table-carto">
+                <thead>
+                    <tr>
+                        <th onclick="sortCarto('nom')">Entreprise ↕</th>
+                        <th onclick="sortCarto('secteur')">Secteur ↕</th>
+                        <th onclick="sortCarto('taille')">Taille ↕</th>
+                        <th onclick="sortCarto('location')">Localisation ↕</th>
+                        <th onclick="sortCarto('effectif')">Effectif ↕</th>
+                        <th onclick="sortCarto('relevance')">Relevance Data ↕</th>
+                        <th onclick="sortCarto('source')">Source ↕</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-carto"></tbody>
             </table>
         </div>
     </div>
@@ -459,19 +512,150 @@ function renderOffreTopChart() {
     });
 }
 
-// ==================== INIT ====================
-function initDashboard(){initEntrepriseFilters();initOffreFilters();filterEntreprises();filterOffres();renderPriorityActions();}
+// ==================== CARTOGRAPHIE ====================
+let cartoEntreprises=[], filteredCarto=[], cartoSortCol='relevance', cartoSortAsc=false;
 
-fetch('data.json')
-    .then(r => r.json())
-    .then(data => {
-        entreprises = data.entreprises;
-        offres = data.offres;
-        initDashboard();
-    })
-    .catch(err => {
-        document.querySelector('.dashboard').innerHTML = '<div style="padding:40px;text-align:center;color:#e94560"><h2>Erreur de chargement</h2><p>Impossible de charger data.json</p><p style="font-size:12px;color:#888">'+err.message+'</p></div>';
+function relevanceLevel(r) {
+    const t=(r||'').toLowerCase();
+    if(t.startsWith('très forte')) return 4;
+    if(t.startsWith('forte')) return 3;
+    if(t.startsWith('moyenne')) return 2;
+    return 1;
+}
+function relevanceBadge(r) {
+    const lv=relevanceLevel(r);
+    const cls=lv===4?'badge-rel-tres-forte':lv===3?'badge-rel-forte':lv===2?'badge-rel-moyenne':'badge-rel-faible';
+    const label=r.split('—')[0].trim();
+    return '<span class="badge '+cls+'">'+label+'</span>';
+}
+
+function initCartoFilters() {
+    const secteurs=[...new Set(cartoEntreprises.map(e=>e.secteur))].sort();
+    const tailles=[...new Set(cartoEntreprises.map(e=>e.taille))].sort();
+    const sources=[...new Set(cartoEntreprises.map(e=>e.source))].sort();
+    const selS=document.getElementById('filter-carto-secteur');
+    const selT=document.getElementById('filter-carto-taille');
+    const selSrc=document.getElementById('filter-carto-source');
+    secteurs.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;selS.appendChild(o);});
+    tailles.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;selT.appendChild(o);});
+    sources.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;selSrc.appendChild(o);});
+}
+
+function filterCarto() {
+    const secteur=document.getElementById('filter-carto-secteur').value;
+    const taille=document.getElementById('filter-carto-taille').value;
+    const rel=document.getElementById('filter-carto-relevance').value;
+    const source=document.getElementById('filter-carto-source').value;
+    filteredCarto=cartoEntreprises.filter(e=>{
+        if(secteur&&e.secteur!==secteur)return false;
+        if(taille&&e.taille!==taille)return false;
+        if(source&&e.source!==source)return false;
+        if(rel){
+            const lv=relevanceLevel(e.dataRelevance);
+            if(rel==='tres-forte'&&lv!==4)return false;
+            if(rel==='forte'&&lv!==3)return false;
+            if(rel==='moyenne'&&lv!==2)return false;
+            if(rel==='faible'&&lv>1)return false;
+        }
+        return true;
     });
+    renderCarto(); renderCartoKPIs(); renderCartoSecteurChart(); renderCartoRelevanceChart();
+}
+
+function sortCarto(col) {
+    if(cartoSortCol===col) cartoSortAsc=!cartoSortAsc; else {cartoSortCol=col;cartoSortAsc=true;}
+    renderCarto();
+}
+
+function renderCarto() {
+    const sorted=[...filteredCarto].sort((a,b)=>{
+        let va,vb;
+        switch(cartoSortCol){
+            case'nom':va=a.nom;vb=b.nom;break;
+            case'secteur':va=a.secteur;vb=b.secteur;break;
+            case'taille':va=tailleOrder(a.taille);vb=tailleOrder(b.taille);return cartoSortAsc?va-vb:vb-va;
+            case'location':va=a.location;vb=b.location;break;
+            case'effectif':va=a.effectif;vb=b.effectif;break;
+            case'relevance':va=relevanceLevel(a.dataRelevance);vb=relevanceLevel(b.dataRelevance);return cartoSortAsc?va-vb:vb-va;
+            case'source':va=a.source;vb=b.source;break;
+            default:va=relevanceLevel(a.dataRelevance);vb=relevanceLevel(b.dataRelevance);return cartoSortAsc?va-vb:vb-va;
+        }
+        if(typeof va==='string')return cartoSortAsc?va.localeCompare(vb):vb.localeCompare(va);
+        return cartoSortAsc?va-vb:vb-va;
+    });
+    document.getElementById('tbody-carto').innerHTML=sorted.map(e=>'<tr>'+
+        '<td><strong>'+e.nom+'</strong>'+(e.notes?'<br><small style="color:#888">'+e.notes+'</small>':'')+'</td>'+
+        '<td>'+e.secteur+'<br><small style="color:#888">'+e.sousSecteur+'</small></td>'+
+        '<td>'+tailleBadge(e.taille)+'</td>'+
+        '<td>'+e.location+'</td>'+
+        '<td>'+e.effectif+'</td>'+
+        '<td>'+relevanceBadge(e.dataRelevance)+'<br><small style="color:#888">'+(e.dataRelevance.includes('—')?e.dataRelevance.split('—')[1].trim():'')+'</small></td>'+
+        '<td><span class="badge badge-source">'+e.source+'</span></td></tr>').join('');
+    document.getElementById('count-carto').textContent='('+filteredCarto.length+')';
+}
+
+function renderCartoKPIs() {
+    const t=filteredCarto.length;
+    const tf=filteredCarto.filter(e=>relevanceLevel(e.dataRelevance)>=3).length;
+    const sec=new Set(filteredCarto.map(e=>e.secteur)).size;
+    const gg=filteredCarto.filter(e=>e.taille==='Grand groupe').length;
+    const eti=filteredCarto.filter(e=>e.taille==='ETI').length;
+    document.getElementById('kpis-carto').innerHTML=
+        '<div class="kpi accent1"><div class="label">Entreprises cibles</div><div class="value">'+t+'</div><div class="detail">Toulouse + 50km</div></div>'+
+        '<div class="kpi accent2"><div class="label">Relevance forte+</div><div class="value">'+tf+'</div><div class="detail">'+Math.round(tf/Math.max(t,1)*100)+'% du total</div></div>'+
+        '<div class="kpi accent3"><div class="label">Secteurs</div><div class="value">'+sec+'</div><div class="detail">diversité sectorielle</div></div>'+
+        '<div class="kpi accent4"><div class="label">Grands groupes</div><div class="value">'+gg+'</div><div class="detail">employeurs majeurs</div></div>'+
+        '<div class="kpi accent5"><div class="label">ETI</div><div class="value">'+eti+'</div><div class="detail">taille intermédiaire</div></div>';
+}
+
+let chartCartoSecteur=null;
+function renderCartoSecteurChart() {
+    const counts={};
+    filteredCarto.forEach(e=>{counts[e.secteur]=(counts[e.secteur]||0)+1;});
+    const labels=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
+    const data=labels.map(l=>counts[l]);
+    const colors=['#0f3460','#e94560','#0ea5e9','#10b981','#f59e0b','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f97316','#6366f1','#14b8a6','#a855f7','#ef4444','#22c55e','#3b82f6'];
+    if(chartCartoSecteur)chartCartoSecteur.destroy();
+    chartCartoSecteur=new Chart(document.getElementById('chart-carto-secteur'),{
+        type:'bar',data:{labels,datasets:[{data,backgroundColor:colors.slice(0,labels.length),borderRadius:6}]},
+        options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1}}}}
+    });
+}
+
+let chartCartoRelevance=null;
+function renderCartoRelevanceChart() {
+    const counts={'Très forte':0,'Forte':0,'Moyenne':0,'Faible':0};
+    filteredCarto.forEach(e=>{
+        const lv=relevanceLevel(e.dataRelevance);
+        if(lv===4)counts['Très forte']++;
+        else if(lv===3)counts['Forte']++;
+        else if(lv===2)counts['Moyenne']++;
+        else counts['Faible']++;
+    });
+    const labels=Object.keys(counts);
+    const data=labels.map(l=>counts[l]);
+    const colors=['#166534','#1e40af','#d97706','#9ca3af'];
+    if(chartCartoRelevance)chartCartoRelevance.destroy();
+    chartCartoRelevance=new Chart(document.getElementById('chart-carto-relevance'),{
+        type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors}]},
+        options:{plugins:{legend:{position:'bottom'}}}
+    });
+}
+
+// ==================== INIT ====================
+function initDashboard(){initEntrepriseFilters();initOffreFilters();initCartoFilters();filterEntreprises();filterOffres();filterCarto();renderPriorityActions();}
+
+Promise.all([
+    fetch('data.json').then(r=>r.json()),
+    fetch('entreprises_cibles.json').then(r=>r.json())
+]).then(([data, carto]) => {
+    entreprises = data.entreprises;
+    offres = data.offres;
+    cartoEntreprises = carto.entreprises;
+    initDashboard();
+}).catch(err => {
+    document.querySelector('.dashboard').innerHTML = '<div style="padding:40px;text-align:center;color:#e94560"><h2>Erreur de chargement</h2><p>Impossible de charger les données</p><p style="font-size:12px;color:#888">'+err.message+'</p></div>';
+});
 </script>
 </body>
 </html>
